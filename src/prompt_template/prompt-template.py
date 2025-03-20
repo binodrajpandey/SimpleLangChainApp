@@ -10,15 +10,15 @@ llm = ChatOpenAI(
     verbose=True
 )
 
-# prompt template
-prompt = ChatPromptTemplate.from_template("Tell me a joke about {subject}")
-
-# Create a LLM chain
-chain = prompt | llm # output of prompt is the input of llm
-
-llm_response = chain.invoke({"subject": "dog"})
-
-print(llm_response)
+# # prompt template
+# prompt = ChatPromptTemplate.from_template("Tell me a joke about {subject}")
+#
+# # Create a LLM chain
+# chain = prompt | llm # output of prompt is the input of llm
+#
+# llm_response = chain.invoke({"subject": "dog"})
+#
+# print(llm_response)
 
 
 # Another way of creating prompt

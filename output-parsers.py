@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser, CommaSeparatedListOutputParser, JsonOutputParser
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 load_dotenv()
 
 model = ChatOpenAI(
@@ -55,6 +55,6 @@ def get_json_response():
     })
     return response
 
-print(get_response_as_string())
-print(get_list_of_items())
+# print(get_response_as_string())
+# print(get_list_of_items())
 print(get_json_response())

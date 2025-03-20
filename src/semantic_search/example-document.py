@@ -13,7 +13,8 @@ docA = Document(
 
 model = ChatOpenAI(
     model="gpt-3.5-turbo",
-    temperature=0.7
+    temperature=0.7,
+    max_tokens=1000,
 )
 
 prompt = ChatPromptTemplate.from_template("""

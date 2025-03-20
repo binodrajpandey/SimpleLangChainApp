@@ -10,5 +10,9 @@ which python3
 
 Or create it from the IDE
 
-### Create OPEN_AI key
+### Create OPEN_API_KEY
 Create key from here https://platform.openai.com/api-keys
+
+### crate TAVILY_API_KEY 
+Create an account from [here](https://app.tavily.com/home)
+copy the api key and set it in to the .env file

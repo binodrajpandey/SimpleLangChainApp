@@ -1,37 +1,35 @@
-# reference: https://python.langchain.com/v0.1/docs/use_cases/chatbots/retrieval/
-from typing import Dict
-
+# It has to be fixed
 from dotenv import load_dotenv
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores.faiss import FAISS
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import MessagesPlaceholder
+from langchain.chains.history_aware_retriever import create_history_aware_retriever
 
 load_dotenv()
 
 def get_documents_from_web(url):
     loader = WebBaseLoader(url)
     raw_documents = loader.load()
+
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=400,
+        chunk_size=400, # increase the response quality with higher value
         chunk_overlap=20
     )
-    return splitter.split_documents(raw_documents)
+    split_docs = splitter.split_documents(raw_documents)
+    return split_docs
 
 
 def create_vector(documents):
     """ Convert the documents into the format that the database(vector database) will understand. Embedding function."""
     embeddings = OpenAIEmbeddings()
-    return FAISS.from_documents(documents, embeddings)
-
-def parse_retriever_input(params: Dict):
-    return params["question"]
+    vector_store = FAISS.from_documents(documents, embeddings)
+    return vector_store
 
 def create_chain(vector_store):
     model = ChatOpenAI(
@@ -39,22 +37,35 @@ def create_chain(vector_store):
         temperature=0.4
     )
 
+    # prompt = ChatPromptTemplate.from_template("""
+    # Answer the user's question:
+    # Context: {context}
+    # Question: {question}
+    # """)
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", "Answer the user's questions based on the context: {context}"),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{question}")
     ])
 
-    retriever = vector_store.as_retriever(search_kwargs={"k":3})
-    document_chain = create_stuff_documents_chain(
-        llm=model,
-        prompt=prompt
-    )
 
-    retrieval_chain = RunnablePassthrough.assign(
-        context=parse_retriever_input | retriever,
-    ).assign(
-        answer=document_chain,
+    retriever = vector_store.as_retriever(search_kwargs={"k":3})
+    retriever_prompt = ChatPromptTemplate.from_messages([
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("human", "{question}"),
+        ("human", "given the above conversation, generate a search query to look up in order to get information relevant to the conversation")
+    ])
+    history_aware_retriever = create_history_aware_retriever(
+        llm = model,
+        retriever=retriever,
+        prompt=retriever_prompt
+    )
+    # Define the retrieval chain
+    retrieval_chain = (
+            RunnableParallel({"context": history_aware_retriever, "question": RunnablePassthrough()})
+            | prompt
+            | model
     )
 
     return retrieval_chain
@@ -71,12 +82,6 @@ if __name__ == "__main__":
     split_docs = get_documents_from_web("https://python.langchain.com/v0.1/docs/expression_language/")
     vector_store = create_vector(split_docs)
     chain = create_chain(vector_store)
-
-    # chat_history = [
-    #     HumanMessage(content="Hello"),
-    #     AIMessage(content="Hello, How can I assist you?"),
-    #     HumanMessage(content="My name is Binod")
-    # ]
 
     chat_history = []
     while True:
