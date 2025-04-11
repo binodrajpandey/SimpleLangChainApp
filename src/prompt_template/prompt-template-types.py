@@ -1,5 +1,5 @@
 # reference https://python.langchain.com/docs/concepts/prompt_templates/
-# see here for the few shots prompt template
+# see here https://python.langchain.com/docs/how_to/few_shot_examples/ for the few shots prompt template
 
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShotPromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage
@@ -104,7 +104,7 @@ So the final answer is: No
 example_prompt = PromptTemplate.from_template("Question: {question}\n{answer}")
 val = example_prompt.invoke(examples[0]).to_string()
 
-print(val)
+# print(val)
 
 prompt = FewShotPromptTemplate(
     examples=examples,
