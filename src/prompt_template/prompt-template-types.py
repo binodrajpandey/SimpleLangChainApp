@@ -10,6 +10,13 @@ from langchain_core.messages import HumanMessage, AIMessage
 # val = prompt_template.invoke({"topic": "cats"})
 # print(val.text)
 #
+# prompt_template = PromptTemplate(
+#     input_variables=["cuisine"],
+#     template="I want to open a restaurant for a {cuisine} food. Suggest a fancy name for this."
+# )
+# value = prompt_template.format(cuisine="Italian")
+# print((value))
+
 # # ---- Example 2 ----
 # prompt_template = ChatPromptTemplate([
 #     ("system", "You are a helpful assistant"),

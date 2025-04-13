@@ -5,3 +5,4 @@ langchain_community==0.3.19
 beautifulsoup4==4.13.3
 faiss-cpu==1.10.0
 langfuse==2.60.1
+langgraph==0.3.28
