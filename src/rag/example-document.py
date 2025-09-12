@@ -3,12 +3,19 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 from langchain.chains.combine_documents import create_stuff_documents_chain
-
+from sqlalchemy.testing.suite.test_reflection import metadata
 
 load_dotenv()
 
+text = """
+ LangChain Expression Language, or LCEL, is a declarative way to easily compose chains together.
+ LCEL was designed from day 1 to support putting prototypes in production, with no code changes,
+ from the simplest “prompt + LLM” chain to the most complex chains (we’ve seen folks successfully
+ run LCEL chains with 100s of steps in production).
+"""
 docA = Document(
-    page_content="LangChain Expression Language, or LCEL, is a declarative way to easily compose chains together. LCEL was designed from day 1 to support putting prototypes in production, with no code changes, from the simplest “prompt + LLM” chain to the most complex chains (we’ve seen folks successfully run LCEL chains with 100s of steps in production)."
+    page_content=text,
+    metadata={}
 )
 
 model = ChatOpenAI(
@@ -38,11 +45,12 @@ chain = create_stuff_documents_chain(
 )
 
 response = chain.invoke({
-    "input": "What is LCEL",
+    "input": "What is LCEL?",
     "context": [docA]
-}) # might return wrong content without context.
+})  # might return wrong content without context.
 
 print(response)
+print(model.invoke("What is LCEL?").content)
 
 # Fetch data from the source using document loader.
 # The document loader will store the content of this data source what is known as langchain document.
