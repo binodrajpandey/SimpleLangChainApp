@@ -1,6 +1,6 @@
-from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, Literal
 
+from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 
 
@@ -19,6 +19,14 @@ def multiply_node(state) -> State:
     number = number * 2
     return {"number": number}
 
+def next_edge_after_addition(
+    state: State,
+) -> Literal["multiply", END]:
+    if state.get("number") % 2 == 0:
+        return "multiply"
+    else:
+        return END
+
 # Build graph
 builder = StateGraph(State)
 
@@ -27,15 +35,15 @@ builder.add_node("add_one", add_one_node)
 builder.add_node("multiply", multiply_node)
 
 # Set entry, flow, and finish
-builder.set_entry_point("add_one")
-builder.add_edge("add_one", "multiply")
-builder.set_finish_point("multiply")
+builder.add_edge(START, "add_one")
+builder.add_conditional_edges("add_one", next_edge_after_addition)
+builder.add_edge("multiply", END)
 
 # Compile graph
 graph = builder.compile()
 
-# Run with initial number
-input_data: State = {"number": 3}
+# Run with initial number.
+input_data: State = {"number": 4} # Also test with value 3
 result = graph.invoke(input_data)
 
 print("Final Result:", result["number"])
@@ -43,10 +51,3 @@ print("Final Result:", result["number"])
 for event in graph.stream(input_data):
         for value in event.values():
             print(value)
-
-img_data = graph.get_graph().draw_mermaid_png()
-image_path = Path("graph_output.png")
-with open(image_path, "wb") as f:
-    f.write(img_data)
-
-print(f"Image saved to {image_path.resolve()}")
