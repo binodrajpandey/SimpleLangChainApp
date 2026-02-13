@@ -1,33 +1,40 @@
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.memory import InMemorySaver
 from typing import TypedDict
 
 # Define graph state
 class MyState(TypedDict):
-    message: str
-    counter: int
+    number: int
 
 # Node function
 def increment(state: MyState):
-    return {"counter": state["counter"] + 1}
+    return {"number": state["number"] + 1}
+
+def multiply(state: MyState):
+    return {"number": state["number"] *5 }
+
 
 # Create graph
 builder = StateGraph(MyState)
 builder.add_node("increment", increment)
+builder.add_node("multiply", multiply)
 builder.set_entry_point("increment")
-builder.set_finish_point("increment")
+builder.add_edge("increment", "multiply")
+builder.set_finish_point("multiply")
 
-# Add persistence
-checkpointer = SqliteSaver.from_conn_string("sqlite:///graph.db")
-
+checkpointer = InMemorySaver()
 graph = builder.compile(checkpointer=checkpointer)
 
-# Run with thread_id (VERY IMPORTANT)
-config = {"configurable": {"thread_id": "user-1"}}
+config: RunnableConfig = {
+    "configurable": {
+        "thread_id": "1"
+    }
+}
 
-result = graph.invoke(
-    {"message": "hello", "counter": 0},
-    config=config
-)
-
+result =graph.invoke(input={"number": 0}, config= config)
 print(result)
+
+state = graph.get_state(config)
+print(state)
+print("result from state", state.values)
