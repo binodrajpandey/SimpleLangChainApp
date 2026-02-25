@@ -2,17 +2,14 @@
 from typing import Dict
 
 from dotenv import load_dotenv
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import WebBaseLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores.faiss import FAISS
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import MessagesPlaceholder
-
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 load_dotenv()
 
 def get_documents_from_web(url):
@@ -46,11 +43,7 @@ def create_chain(vector_store):
     ])
 
     retriever = vector_store.as_retriever(search_kwargs={"k":3})
-    document_chain = create_stuff_documents_chain(
-        llm=model,
-        prompt=prompt
-    )
-
+    document_chain = prompt | model
     retrieval_chain = RunnablePassthrough.assign(
         context=parse_retriever_input | retriever,
     ).assign(

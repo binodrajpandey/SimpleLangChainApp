@@ -1,7 +1,6 @@
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.agents import create_openai_functions_agent, AgentExecutor
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain.agents import create_agent
+from langchain_tavily import TavilySearch
 
 from dotenv import load_dotenv
 
@@ -13,27 +12,18 @@ model = ChatOpenAI(
     max_tokens=1000
 )
 
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "you are friendly assistant called Max."),
-    ("human", "{input}"),
-    MessagesPlaceholder(variable_name="agent_scratchpad")
-])
-
-search = TavilySearchResults()
+search = TavilySearch()
 tools = [search]
-agent = create_openai_functions_agent(
-    llm=model,
-    prompt=prompt,
+agent = create_agent(
+    model=model,
+    system_prompt="you are friendly assistant called Max.",
     tools=tools
 )
 
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools
-)
-
-response = agent_executor.invoke({
-    "input": "What is the weather in Tokyo today?"
+response = agent.invoke({
+    "messages": [
+        {"role": "user", "content": "What is the weather in Tokyo today?"}
+    ]
 })
 
 print(response)
